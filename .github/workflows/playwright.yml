@@ -37,9 +37,9 @@ jobs:
       - name: Send test report to Google Chat on failure
         if: ${{ failure() }}
         run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"text": "❌ Tests failed on branch '${{ github.ref }}'! See details in GitHub Actions."}' ${{ secrets.actions.GOOGLE_CHAT_WEBHOOK }}
+          curl -X POST -H 'Content-Type: application/json' -d '{"text": "❌ Tests failed on branch '${{ github.ref }}'! See details in GitHub Actions."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
 
       - name: Send test report to Google Chat on success
         if: ${{ success() }}
         run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"text": "✅ Tests passed on branch '${{ github.ref }}'."}' ${{ secrets.actions.GOOGLE_CHAT_WEBHOOK }}
+          curl -X POST -H 'Content-Type: application/json' -d '{"text": "✅ Tests passed on branch '${{ github.ref }}'."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
