@@ -33,20 +33,24 @@ jobs:
           npx playwright test src/tests/kickStart.spec.ts --reporter=json > test-results.json || exit 0
           echo "::set-output name=test-results::$(cat test-results.json)"
 
-      - name: Send test status to Google Chat
+      - name: Check if test-results.json is valid
         run: |
-          status=$(jq -r '.[0].status' test-results.json)
-          case $status in
-            "passed")
-              curl -X POST -H 'Content-Type: application/json' -d '{"text": "✅ Tests passed on branch '${{ github.ref }}'."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
-              ;;
-            "failed")
-              curl -X POST -H 'Content-Type: application/json' -d '{"text": "❌ Tests failed on branch '${{ github.ref }}'! See details in GitHub Actions."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
-              ;;
-            *)
-              curl -X POST -H 'Content-Type: application/json' -d '{"text": "Tests are currently '${status}' on branch '${{ github.ref }}'."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
-              ;;
-          esac
+          if [ -s "test-results.json" ]; then
+            status=$(jq -r '.[0].status' test-results.json)
+            case $status in
+              "passed")
+                curl -X POST -H 'Content-Type: application/json' -d '{"text": "✅ Tests passed on branch '${{ github.ref }}'."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
+                ;;
+              "failed")
+                curl -X POST -H 'Content-Type: application/json' -d '{"text": "❌ Tests failed on branch '${{ github.ref }}'! See details in GitHub Actions."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
+                ;;
+              *)
+                curl -X POST -H 'Content-Type: application/json' -d '{"text": "Tests are currently '${status}' on branch '${{ github.ref }}'."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
+                ;;
+            esac
+          else
+            echo "test-results.json is empty or invalid."
+          fi
 
       - name: Upload test artifacts
         if: always()
