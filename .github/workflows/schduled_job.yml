@@ -36,4 +36,4 @@ jobs:
         with:
           name: allure-report
           path: allure-report  # Adjust path based on where your report is generated
-          retention-days: 30
+          retention-days: 15
