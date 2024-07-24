@@ -1,17 +1,16 @@
-name: Send Test Results to Google Chat
+name: Playwright Tests
 
 on:
   push:
-    branches:
-      - main  # Replace with your main branch name
+    branches: [ main, master ]
   pull_request:
-    branches:
-      - main  # Replace with your main branch name
+    branches: [ main, master ]
 
 jobs:
-  test-and-send-report:
-    name: Test and Send Report
+  test:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,34 +26,23 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run tests and capture results
-        id: test
-        run: |
-          npx playwright test src/tests/kickStart.spec.ts --reporter=json > test-results.json || true
-          echo "::set-output name=test-results::$(cat test-results.json)"
+      - name: Run Playwright tests
+        run: npx playwright test
 
-      - name: Check if test-results.json is valid and send status to Google Chat
-        run: |
-          if [ -s "test-results.json" ]; then
-            status=$(jq -r '.[0].status' test-results.json)
-            case $status in
-              "passed")
-                curl -X POST -H 'Content-Type: application/json' -d '{"text": "✅ Tests passed on branch '${{ github.ref }}'."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
-                ;;
-              "failed")
-                curl -X POST -H 'Content-Type: application/json' -d '{"text": "❌ Tests failed on branch '${{ github.ref }}'! See details in GitHub Actions."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
-                ;;
-              *)
-                curl -X POST -H 'Content-Type: application/json' -d '{"text": "Tests are currently '${status}' on branch '${{ github.ref }}'."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
-                ;;
-            esac
-          else
-            echo "test-results.json is empty or invalid."
-          fi
-
-      - name: Upload test artifacts
-        if: always()
+      - name: Generate report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: test-results
-          path: test-results.json
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 3
+
+      - name: Send final test status to Google Chat
+        if: always()
+        run: |
+          status=$?
+          if [ $status -eq 0 ]; then
+            curl -X POST -H 'Content-Type: application/json' -d '{"text": "✅ Playwright tests passed on branch '${{ github.ref }}'."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
+          else
+            curl -X POST -H 'Content-Type: application/json' -d '{"text": "❌ Playwright tests failed on branch '${{ github.ref }}'! See details in GitHub Actions."}' ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
+          fi
