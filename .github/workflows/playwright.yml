@@ -30,7 +30,7 @@ jobs:
       - name: Run tests and capture results
         id: test
         run: |
-         npx playwright test -- --json > test-results.json
+          npx playwright test --reporter=json > test-results.json
           echo "::set-output name=test-results::$(cat test-results.json)"
 
       - name: Send test report to Google Chat on failure
@@ -49,5 +49,3 @@ jobs:
         with:
           name: test-results
           path: test-results.json
-          retention-days: 15
-
