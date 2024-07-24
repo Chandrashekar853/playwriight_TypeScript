@@ -26,9 +26,8 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests in headless mode
-        run: |
-          xvfb-run --auto-servernum npx playwright test
+      - name: Run Playwright tests
+        run: npx playwright test
 
       - name: Generate report
         uses: actions/upload-artifact@v4
@@ -38,10 +37,18 @@ jobs:
           path: playwright-report/
           retention-days: 3
 
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: playwright-report
+          path: playwright-report
+
       - name: Send final test status to Google Chat
         if: always()
         run: |
+          echo "Sending notification..."
           status=$?
+          echo "Exit status: $status"
           if [ $status -eq 0 ]; then
             curl -X POST -H 'Content-Type: application/json' -d "{\"text\": \"✅ Playwright tests passed on branch '${{ github.ref }}'.\"}" ${{ secrets.GOOGLE_CHAT_WEBHOOK }} || true
           else
