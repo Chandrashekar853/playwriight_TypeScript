@@ -39,10 +39,10 @@ jobs:
           retention-days: 3
 
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report
+          path: playwright-report/
 
       - name: Send final test status to Google Chat
         if: always()
