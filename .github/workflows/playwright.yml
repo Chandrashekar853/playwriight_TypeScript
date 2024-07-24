@@ -30,10 +30,10 @@ jobs:
       - name: Run tests and capture results
         id: test
         run: |
-          npx playwright test src/tests/kickStart.spec.ts --reporter=json > test-results.json || exit 0
+          npx playwright test src/tests/kickStart.spec.ts --reporter=json > test-results.json || true
           echo "::set-output name=test-results::$(cat test-results.json)"
 
-      - name: Check if test-results.json is valid
+      - name: Check if test-results.json is valid and send status to Google Chat
         run: |
           if [ -s "test-results.json" ]; then
             status=$(jq -r '.[0].status' test-results.json)
