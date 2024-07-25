@@ -2,7 +2,7 @@ name: Daily Report Generator
 
 on:
   schedule:
-    - cron: '30 5 * * *'  # Runs at 5:30 AM UTC (11 AM IST)
+    - cron: '0 5 * * *'  # Runs at 5:30 AM UTC (11 AM IST)
 
 jobs:
   generate-report:
@@ -23,8 +23,9 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests
-        run: npx playwright test
+      - name: Run Playwright tests in headless mode
+        run: |
+          xvfb-run --auto-servernum npx playwright test
 
       - name: Generate Allure report
         run: |
@@ -36,4 +37,4 @@ jobs:
         with:
           name: allure-report
           path: allure-report  # Adjust path based on where your report is generated
-          retention-days: 15
+          retention-days: 3
